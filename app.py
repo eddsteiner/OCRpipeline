@@ -67,8 +67,9 @@ class OCRAppGUI:
         self.month_menu = ttk.Combobox(self.root, textvariable=self.month, values=month_options)
         self.month_menu.pack()
 
-        tk.Label(self.root, text="Select Type (max or min):").pack(pady=5)
-        self.type_menu = ttk.Combobox(self.root, textvariable=self.data_type, values=["max", "min"])
+        tk.Label(self.root, text="Select Type (max, min, or precipitation):").pack(pady=5)
+        self.type_menu = ttk.Combobox(self.root, textvariable=self.data_type, values=["max", "min", "precipitation"])
+
         self.type_menu.pack()
 
         tk.Button(self.root, text="Choose Table Image", command=self.select_table_file).pack(pady=5)

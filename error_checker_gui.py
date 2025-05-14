@@ -26,7 +26,8 @@ class OCRCheckerGUI:
         self.checking_outliers = False
 
         self.create_widgets()
-        self.master.bind('<Return>', lambda event: self.confirm_cell())
+        self.master.bind('<Return>', self.handle_enter_key)
+
 
     def create_widgets(self):
         # Top input fields and buttons centered
@@ -41,7 +42,7 @@ class OCRCheckerGUI:
         self.month_menu.bind("<<ComboboxSelected>>", lambda e: self.update_csv_menu())
 
         tk.Label(top_inner, text="Type:").grid(row=1, column=0)
-        self.type_menu = ttk.Combobox(top_inner, textvariable=self.type_var, values=["max", "min"], width=10)
+        self.type_menu = ttk.Combobox(top_inner, textvariable=self.type_var, values=["max", "min", "precipitation"], width=10)
         self.type_menu.grid(row=1, column=1)
         self.type_menu.bind("<<ComboboxSelected>>", lambda e: self.update_csv_menu())
 
@@ -98,8 +99,16 @@ class OCRCheckerGUI:
         right_column.grid_rowconfigure(0, weight=1)
         right_column.grid_columnconfigure(0, weight=1)
 
+        # Step Mode row
+        step_frame = tk.Frame(right_column)
+        step_frame.grid(row=2, column=0, columnspan=2, pady=(5, 0), sticky="n")
+        self.step_mode = tk.BooleanVar()
+        tk.Checkbutton(step_frame, text="Step Mode", variable=self.step_mode).pack(side="left", padx=(0, 10))
+        tk.Button(step_frame, text="Next Cell", command=self.next_cell).pack(side="left")
+
+        # Search Row/Col below Step Mode
         search_frame = tk.Frame(right_column)
-        search_frame.grid(row=2, column=0, columnspan=2, pady=(10, 20), sticky="n")
+        search_frame.grid(row=3, column=0, columnspan=2, pady=(10, 20), sticky="n")
         tk.Label(search_frame, text="Row:").pack(side="left")
         self.search_row = tk.Entry(search_frame, width=5)
         self.search_row.pack(side="left")
@@ -107,6 +116,26 @@ class OCRCheckerGUI:
         self.search_col = tk.Entry(search_frame, width=5)
         self.search_col.pack(side="left")
         tk.Button(search_frame, text="Go to Cell", command=self.goto_cell).pack(side="left", padx=5)
+
+
+    def handle_enter_key(self, event):
+        if self.step_mode.get():
+            self.next_cell()
+        else:
+            self.confirm_cell()
+
+
+
+    def next_cell(self):
+        self.col_idx += 1
+        if self.col_idx >= self.current_csv.shape[1]:
+            self.col_idx = 0
+            self.row_idx += 1
+        if self.row_idx >= len(self.current_csv):
+            messagebox.showinfo("Done", "Reached end of table.")
+            return
+        self.load_cell(self.current_csv.iat[self.row_idx, self.col_idx])
+
 
     def on_single_click_text(self, event):
         try:
@@ -227,29 +256,32 @@ class OCRCheckerGUI:
                 continue
 
     def load_next_invalid_cell(self):
-        while self.row_idx < len(self.current_csv):
-            while self.col_idx < self.current_csv.shape[1]:
-                value = self.current_csv.iat[self.row_idx, self.col_idx]
-                if not self.checking_outliers:
-                    if self.is_invalid(str(value), self.col_idx == 0):
+        if self.step_mode.get():
+            return
+        else:
+            while self.row_idx < len(self.current_csv):
+                while self.col_idx < self.current_csv.shape[1]:
+                    value = self.current_csv.iat[self.row_idx, self.col_idx]
+                    if not self.checking_outliers:
+                        if self.is_invalid(str(value), self.col_idx == 0):
+                            self.load_cell(value)
+                            return
+                    elif self.col_idx > 0 and (self.row_idx, self.col_idx) in self.outlier_indices:
                         self.load_cell(value)
                         return
-                elif self.col_idx > 0 and (self.row_idx, self.col_idx) in self.outlier_indices:
-                    self.load_cell(value)
-                    return
-                self.col_idx += 1
-            self.col_idx = 0
-            self.row_idx += 1
+                    self.col_idx += 1
+                self.col_idx = 0
+                self.row_idx += 1
 
-        if not self.checking_outliers:
-            self.checking_outliers = True
-            self.row_idx = 0
-            self.col_idx = 0
-            self.find_outliers()
-            self.load_next_invalid_cell()
-        else:
-            self.save_csv()
-            messagebox.showinfo("Done", "No more invalid or outlier cells! CSV has been saved.")
+            if not self.checking_outliers:
+                self.checking_outliers = True
+                self.row_idx = 0
+                self.col_idx = 0
+                self.find_outliers()
+                self.load_next_invalid_cell()
+            else:
+                self.save_csv()
+                messagebox.showinfo("Done", "No more invalid or outlier cells! CSV has been saved.")
 
     def load_cell(self, cell_value):
         self.current_text.set(cell_value)
