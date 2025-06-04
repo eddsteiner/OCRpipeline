@@ -84,6 +84,9 @@ class OCRAppGUI:
         tk.Button(self.root, text="Run OCR", command=self.run_ocr).pack(pady=4)
         tk.Button(self.root, text="Launch Error Checker", command=self.launch_checker).pack(pady=4)
 
+        tk.Button(self.root, text="Manual Input", command=self.launch_manual_input).pack(pady=4)
+
+
     def select_table_file(self):
         init_dir = os.path.join(INPUT_ROOT, self.month.get(), self.data_type.get()) \
             if self.month.get() and self.data_type.get() else INPUT_ROOT
@@ -137,6 +140,29 @@ class OCRAppGUI:
             subprocess.Popen(["python", "error_checker_gui.py"])
         except Exception as e:
             messagebox.showerror("Error", f"Could not launch error checker: {e}")
+
+    def launch_manual_input(self):
+        if not self.table_number.get():
+            messagebox.showerror("Missing info", "Please enter a table number.")
+            return
+
+        dtype_folder = {
+            "precipitation": "precipitation",
+            "max": "max",
+            "min": "min"
+        }.get(self.data_type.get().lower(), self.data_type.get().lower())
+
+        try:
+            import subprocess
+            subprocess.Popen([
+                "python", "manual_input_gui.py",
+                self.month.get() or "miscellaneous",
+                dtype_folder,
+                self.table_number.get()
+            ])
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not launch manual input GUI: {e}")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -117,12 +117,34 @@ class OCRCheckerGUI:
         self.search_col.pack(side="left")
         tk.Button(search_frame, text="Go to Cell", command=self.goto_cell).pack(side="left", padx=5)
 
+        tk.Button(top_inner, text="Add Decimal Prefix", command=self.add_decimal_prefix).grid(row=4, column=0, columnspan=2, pady=5)
+
+    def add_decimal_prefix(self):
+        confirm = messagebox.askyesno("Confirm Action", "Are you sure you want to add a decimal to the start of all values (excluding the first column)?")
+        if not confirm:
+            return
+
+        for col in range(1, self.current_csv.shape[1]):
+            for row in range(len(self.current_csv)):
+                val = str(self.current_csv.iat[row, col]).strip()
+                if val and val.lower() not in {"x", "nan"}:
+                    try:
+                        float(val)
+                        if "." not in val:
+                            self.current_csv.iat[row, col] = f".{val}"
+                    except ValueError:
+                        continue
+
+        self.update_csv_display()
+        messagebox.showinfo("Success", "Decimal prefixes added.")
+
 
     def handle_enter_key(self, event):
         if self.step_mode.get():
             self.next_cell()
         else:
             self.confirm_cell()
+
 
 
 
