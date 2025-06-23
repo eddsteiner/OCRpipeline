@@ -99,12 +99,6 @@ class OCRCheckerGUI:
         right_column.grid_rowconfigure(0, weight=1)
         right_column.grid_columnconfigure(0, weight=1)
 
-        # Step Mode row
-        step_frame = tk.Frame(right_column)
-        step_frame.grid(row=2, column=0, columnspan=2, pady=(5, 0), sticky="n")
-        self.step_mode = tk.BooleanVar()
-        tk.Checkbutton(step_frame, text="Step Mode", variable=self.step_mode).pack(side="left", padx=(0, 10))
-        tk.Button(step_frame, text="Next Cell", command=self.next_cell).pack(side="left")
 
         # Search Row/Col below Step Mode
         search_frame = tk.Frame(right_column)
@@ -120,6 +114,13 @@ class OCRCheckerGUI:
         tk.Button(top_inner, text="Add Decimal Prefix", command=self.add_decimal_prefix).grid(row=4, column=0, columnspan=2, pady=5)
 
     def add_decimal_prefix(self):
+
+        """
+        Adds a decimal prefix to all numeric values in the CSV (except first column).
+        This helps flag missing leading digits (e.g., '.5' instead of '5').
+        """
+
+
         confirm = messagebox.askyesno("Confirm Action", "Are you sure you want to add a decimal to the start of all values (excluding the first column)?")
         if not confirm:
             return
@@ -140,15 +141,22 @@ class OCRCheckerGUI:
 
 
     def handle_enter_key(self, event):
-        if self.step_mode.get():
-            self.next_cell()
-        else:
-            self.confirm_cell()
+
+        """
+        Confirms current cell edit when the user presses the Enter key.
+        """
+
+        self.confirm_cell()
 
 
 
 
     def next_cell(self):
+
+        """
+        Moves to the next cell in the CSV grid. Skips to the next row when the column ends.
+        """
+
         self.col_idx += 1
         if self.col_idx >= self.current_csv.shape[1]:
             self.col_idx = 0
@@ -160,6 +168,9 @@ class OCRCheckerGUI:
 
 
     def on_single_click_text(self, event):
+        """
+        Handles clicks on the text area. Allows user to select a specific cell based on mouse position.
+        """
         try:
             index = self.text_display.index(f"@{event.x},{event.y}")
             line_num, char_index = map(int, index.split('.'))
@@ -189,9 +200,17 @@ class OCRCheckerGUI:
             print("Click parse error:", e)
         
     def get_months(self):
+
+        """
+        Returns a list of month folder names that exist in the output directory.
+        """
+
         return [m for m in calendar_order if os.path.isdir(os.path.join(BASE_DIR, m))]
 
     def update_csv_menu(self):
+        """
+        Updates the list of available CSV files based on selected month and type.
+        """
         month = self.month_var.get()
         dtype = self.type_var.get()
         path = os.path.join(BASE_DIR, month, dtype, "csv_output")
@@ -202,10 +221,17 @@ class OCRCheckerGUI:
                 self.csv_menu.current(0)
 
     def refresh_guide(self):
+        """
+        Refreshes dropdown values for month and CSV file selection.
+        """
         self.month_menu["values"] = self.get_months()
         self.update_csv_menu()
 
     def load_csv(self):
+        """
+        Loads the selected CSV file into memory and sets up the display.
+        Initializes tracking indices and triggers outlier finding.
+        """
         self.month = self.month_var.get()
         self.dtype = self.type_var.get()
         self.csv_filename = self.csv_menu.get()
@@ -228,6 +254,10 @@ class OCRCheckerGUI:
         self.load_next_invalid_cell()
 
     def update_csv_display(self):
+        """
+        Updates the text area with the contents of the current CSV.
+        Highlights the current row.
+        """
         self.text_display.delete(1.0, tk.END)
 
         for row_idx, row in self.current_csv.iterrows():
@@ -246,6 +276,9 @@ class OCRCheckerGUI:
 
 
     def is_invalid(self, value, is_first_col):
+        """
+        Determines whether a given CSV value is considered invalid based on rules.
+        """
         value = value.strip()
         if value.lower() == "x" or value == "":
             return True
@@ -262,6 +295,10 @@ class OCRCheckerGUI:
             return True
 
     def find_outliers(self):
+        """
+        Identifies outlier cells based on z-score (2 standard deviations from mean).
+        Adds their positions to outlier_indices set.
+        """
         self.outlier_indices.clear()
         for col in range(1, self.current_csv.shape[1]):
             try:
@@ -278,34 +315,38 @@ class OCRCheckerGUI:
                 continue
 
     def load_next_invalid_cell(self):
-        if self.step_mode.get():
-            return
-        else:
-            while self.row_idx < len(self.current_csv):
-                while self.col_idx < self.current_csv.shape[1]:
-                    value = self.current_csv.iat[self.row_idx, self.col_idx]
-                    if not self.checking_outliers:
-                        if self.is_invalid(str(value), self.col_idx == 0):
-                            self.load_cell(value)
-                            return
-                    elif self.col_idx > 0 and (self.row_idx, self.col_idx) in self.outlier_indices:
+        """
+        Loads the next invalid or outlier cell to be corrected by the user.
+        If all are valid, it saves the file and ends the process.
+        """
+        while self.row_idx < len(self.current_csv):
+            while self.col_idx < self.current_csv.shape[1]:
+                value = self.current_csv.iat[self.row_idx, self.col_idx]
+                if not self.checking_outliers:
+                    if self.is_invalid(str(value), self.col_idx == 0):
                         self.load_cell(value)
                         return
-                    self.col_idx += 1
-                self.col_idx = 0
-                self.row_idx += 1
+                elif self.col_idx > 0 and (self.row_idx, self.col_idx) in self.outlier_indices:
+                    self.load_cell(value)
+                    return
+                self.col_idx += 1
+            self.col_idx = 0
+            self.row_idx += 1
 
-            if not self.checking_outliers:
-                self.checking_outliers = True
-                self.row_idx = 0
-                self.col_idx = 0
-                self.find_outliers()
-                self.load_next_invalid_cell()
-            else:
-                self.save_csv()
-                messagebox.showinfo("Done", "No more invalid or outlier cells! CSV has been saved.")
+        if not self.checking_outliers:
+            self.checking_outliers = True
+            self.row_idx = 0
+            self.col_idx = 0
+            self.find_outliers()
+            self.load_next_invalid_cell()
+        else:
+            self.save_csv()
+            messagebox.showinfo("Done", "No more invalid or outlier cells! CSV has been saved.")
 
     def load_cell(self, cell_value):
+        """
+        Loads the content of a single cell into the entry field and image panel.
+        """
         self.current_text.set(cell_value)
         self.entry.select_range(0, tk.END)
         self.entry.focus_set()
@@ -327,17 +368,26 @@ class OCRCheckerGUI:
             self.image_panel.image = imgtk
 
     def confirm_cell(self):
+        """
+        Saves the current input value into the current cell and proceeds to the next.
+        """
         value = self.current_text.get()
         self.current_csv.iat[self.row_idx, self.col_idx] = "" if value.strip().lower() in {"x", "nan"} else value
         self.col_idx += 1
         self.load_next_invalid_cell()
 
     def clear_cell(self):
+        """
+        Clears the value of the current cell and proceeds to the next one.
+        """
         self.current_csv.iat[self.row_idx, self.col_idx] = ""
         self.col_idx += 1
         self.load_next_invalid_cell()
 
     def goto_cell(self):
+        """
+        Moves to a specific cell based on user-provided row and column numbers.
+        """
         try:
             row = int(self.search_row.get()) - 1
             col = int(self.search_col.get()) - 1
@@ -350,6 +400,9 @@ class OCRCheckerGUI:
             messagebox.showerror("Invalid Input", "Please enter valid row and column numbers.")
 
     def save_csv(self):
+        """
+        Saves the current in-memory DataFrame back to CSV format.
+        """
         save_path = os.path.join(BASE_DIR, self.month, self.dtype, "csv_output", self.csv_filename)
         self.current_csv.to_csv(save_path, index=False, header=False)
         messagebox.showinfo("Saved", f"CSV saved to: {save_path}")

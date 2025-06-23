@@ -3,7 +3,10 @@ import os
 import math
 import numpy as np
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "plasma-iterator-453622-g3-8dbfc3ca0e9b.json")
+for filename in os.listdir(os.path.join(os.path.dirname(__file__), "key")):
+    if filename.endswith(".json"):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "key", filename)
+        break
 
 def start_segmentation(image_path, output_dir):
     img = cv2.imread(image_path)
