@@ -29,6 +29,9 @@ python app.py
 - **Pandas**
 - **Pillow**
 - **Google Cloud Vision API Client**
+```bash
+pip install -r requirements.txt
+```
 
 ## Why Manual Segmentation?
 
