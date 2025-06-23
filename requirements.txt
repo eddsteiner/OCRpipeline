@@ -1,0 +1,6 @@
+opencv-python
+pillow
+pandas
+numpy
+google-cloud-vision
+google-api-core
