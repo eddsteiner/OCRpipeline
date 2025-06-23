@@ -42,6 +42,24 @@ Fully automatic OCR solutions often fail on poorly scanned, handwritten, or skew
 ![app GUI](documentation/startup.PNG)
 
 ### Segmentation Grid
+
+#### Mouse Controls
+
+- **Left Click** - Draw a grid line (either horizontal or vertical depending on mode)
+- **Right Click** - Undo the last grid line
+
+#### Keyboard Controls
+
+- **Any Key** - Switch from drawing horizontal (row), to vertical (column) grid lines, and then to finish
+  
+#### Rotate Mode
+
+- Press **R** – Enter rotate mode  
+  - Press **R** – Rotate image clockwise  
+  - Press **L** – Rotate image counter-clockwise  
+  - Press **Enter** – Exit rotate mode
+
+  
 ![Segment Grid](documentation/grid_rows.PNG)
 ![Segment Grid](documentation/grid_columns.PNG)
 
