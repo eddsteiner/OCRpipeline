@@ -33,3 +33,14 @@ python app.py
 ## Why Manual Segmentation?
 
 Fully automatic OCR solutions often fail on poorly scanned, handwritten, or skewed tables. This tool allows users to guide the segmentation process, ensuring accurate structure detection and higher OCR reliability.
+
+## APP Preview
+
+![app GUI](documentation/startup.PNG)
+
+### Segmentation Grid
+![Segment Grid](documentation/grid_rows.PNG)
+![Segment Grid](documentation/grid_columns.PNG)
+
+### Validator
+![valid GUI](documentation/error_check.PNG)
