@@ -9,18 +9,6 @@ This project is a user-guided OCR pipeline designed for extracting structured da
 - **Outlier Detection** – Highlights statistically unusual entries for manual review.
 - **CSV Export** – Outputs clean, structured data ready for analysis or database ingestion.
 
-## How to Run
-
-### 1. Add Google Cloud Vision API Key
-
-Place your `.json` key file from google cloud console in the `key/` folder. The application will automatically find and use it.
-
-### 2. Launch the Application
-
-```bash
-python app.py
-```
-
 ## Dependencies
 
 - **Python 3.x**
@@ -31,6 +19,18 @@ python app.py
 - **Google Cloud Vision API Client**
 ```bash
 pip install -r requirements.txt
+```
+
+## How to Run
+
+### 1. Add Google Cloud Vision API Key
+
+Place your `.json` key file from google cloud console in the `key/` folder. The application will automatically find and use it.
+
+### 2. Launch the Application
+
+```bash
+python app.py
 ```
 
 ## Why Manual Segmentation?
