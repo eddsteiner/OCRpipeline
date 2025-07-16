@@ -1,0 +1,15 @@
+ - output\april\min\csv_output\april_min_2.csv
+ - output\april\precipitation\csv_output\april_precipitation_2.csv
+ - output\april\precipitation\csv_output\april_precipitation_3.csv
+ - output\december\max\csv_output\december_max_2.csv
+ - output\december\min\csv_output\december_min_2.csv
+ - output\december\min\csv_output\december_min_3.csv
+ - output\february\max\csv_output\february_max_2.csv
+ - output\january\max\csv_output\january_max_1.csv
+ - output\january\max\csv_output\january_max_3.csv
+ - output\january\precipitation\csv_output\january_precipitation_2.csv
+ - output\july\precipitation\csv_output\july_precipitation_1.csv
+ - output\march\max\csv_output\march_max_1.csv
+ - output\may\min\csv_output\may_min_3.csv
+ - output\october\precipitation\csv_output\october_precipitation_1.csv
+ - output\october\precipitation\csv_output\october_precipitation_3.csv

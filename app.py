@@ -3,9 +3,10 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import cv2
 import numpy as np
+import sys
 
 from segmentation import start_segmentation
-from ocr_processor import run_ocr_on_table
+# from ocr_processor import run_ocr_on_table
 
 # === SETTINGS ===
 INPUT_ROOT = "input_tables"
@@ -129,10 +130,13 @@ class OCRAppGUI:
 
         #launch segmentation
         tk.Button(self.root, text="Start Segmentation", command=self.run_segmentation).pack(pady=8)
-        tk.Button(self.root, text="Run OCR", command=self.run_ocr).pack(pady=4)
+        # tk.Button(self.root, text="Run OCR", command=self.run_ocr).pack(pady=4)
         tk.Button(self.root, text="Launch Error Checker", command=self.launch_checker).pack(pady=4)
 
         # tk.Button(self.root, text="Manual Input", command=self.launch_manual_input).pack(pady=4)
+
+        tk.Button(self.root, text="Launch Checker (From CSV)", command=self.launch_checker_with_corrections).pack(pady=4)
+
 
 
     def select_table_file(self):
@@ -180,26 +184,26 @@ class OCRAppGUI:
         sharpen_segmented_images(out_dir)
         messagebox.showinfo("Segmentation Complete", f"Segmentation and sharpening saved to:\n{out_dir}")
 
-    def run_ocr(self):
+    # def run_ocr(self):
 
-        """
-        Runs OCR on the segmented table images.
-        Saves output as CSV in the appropriate folder.
-        """
+    #     """
+    #     Runs OCR on the segmented table images.
+    #     Saves output as CSV in the appropriate folder.
+    #     """
 
-        if not self.table_number.get():
-            messagebox.showerror("Missing info", "Please enter a table number.")
-            return
+    #     if not self.table_number.get():
+    #         messagebox.showerror("Missing info", "Please enter a table number.")
+    #         return
 
-        segment_path = get_output_folder(self.month.get(), self.data_type.get(), self.table_number.get())
-        csv_out = get_csv_output_folder(self.month.get(), self.data_type.get())
-        messagebox.showinfo("Running OCR", f"Hang Tight! This might take a couple minutes!")
-        run_ocr_on_table(
-            segment_path, csv_out,
-            self.month.get() or "miscellaneous",
-            self.data_type.get() or "miscellaneous",
-            self.table_number.get()
-        )
+    #     segment_path = get_output_folder(self.month.get(), self.data_type.get(), self.table_number.get())
+    #     csv_out = get_csv_output_folder(self.month.get(), self.data_type.get())
+    #     messagebox.showinfo("Running OCR", f"Hang Tight! This might take a couple minutes!")
+    #     run_ocr_on_table(
+    #         segment_path, csv_out,
+    #         self.month.get() or "miscellaneous",
+    #         self.data_type.get() or "miscellaneous",
+    #         self.table_number.get()
+    #     )
 
     def launch_checker(self):
 
@@ -212,6 +216,25 @@ class OCRAppGUI:
             subprocess.Popen(["python", "error_checker_gui.py"])
         except Exception as e:
             messagebox.showerror("Error", f"Could not launch error checker: {e}")
+
+    def launch_checker_with_corrections(self):
+        """
+        Launches the error checker with the default 'error_log.csv' file.
+        """
+        correction_csv_path = os.path.abspath("error_log.csv")
+
+        if not os.path.exists(correction_csv_path):
+            messagebox.showerror("File Not Found", f"'error_log.csv' was not found in:\n{correction_csv_path}")
+            return
+
+        try:
+            import subprocess
+            subprocess.Popen(["python", "checker_for_checker.py", correction_csv_path])
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not launch error checker with corrections:\n{e}")
+
+
+
 
     #MIGHT IMPLEMENT LATER
     # def launch_manual_input(self):
@@ -240,4 +263,6 @@ class OCRAppGUI:
 if __name__ == "__main__":
     root = tk.Tk()
     app = OCRAppGUI(root)
+
+
     root.mainloop()

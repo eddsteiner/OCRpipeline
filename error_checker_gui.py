@@ -369,12 +369,37 @@ class OCRCheckerGUI:
 
     def confirm_cell(self):
         """
-        Saves the current input value into the current cell and proceeds to the next.
+        Saves the current input value into the current cell.
+        If in correction mode, also updates error_log.csv and the target CSV.
         """
         value = self.current_text.get()
-        self.current_csv.iat[self.row_idx, self.col_idx] = "" if value.strip().lower() in {"x", "nan"} else value
-        self.col_idx += 1
-        self.load_next_invalid_cell()
+        cleaned_value = "" if value.strip().lower() in {"x", "nan"} else value
+        self.current_csv.iat[self.row_idx, self.col_idx] = cleaned_value
+
+        # ✅ Save current CSV file (from correction mode)
+        if hasattr(self, "current_file_path"):
+            try:
+                self.current_csv.to_csv(self.current_file_path, index=False, header=False)
+            except Exception as e:
+                messagebox.showerror("Save Error", f"Failed to save: {self.current_file_path}\n\n{e}")
+                return
+
+        # ✅ If in correction mode, mark as corrected and save error log
+        if hasattr(self, 'corrections_df') and self.correction_idx < len(self.corrections_df):
+            try:
+                self.corrections_df.at[self.correction_idx, 'corrected'] = 1
+                self.corrections_df.to_csv(self.correction_csv_path, index=False)
+            except Exception as e:
+                messagebox.showerror("Log Error", f"Failed to update error log:\n{self.correction_csv_path}\n\n{e}")
+                return
+
+            self.correction_idx += 1
+            self.apply_next_correction()
+        else:
+            # Default fallback for manual mode
+            self.col_idx += 1
+            self.load_next_invalid_cell()
+
 
     def clear_cell(self):
         """
